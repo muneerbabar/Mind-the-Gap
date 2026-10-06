@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chair Talk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;800&family=Figtree:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout concept: a sticker-style game. A staircase hero shows the five stages, a level map climbs it, and each level plays as a chat with a simulated patient. Hard outlines, offset shadows, one hot accent. */
+:root {
+  --bg: #E8F4F1;
+  --surface: #FFFFFF;
+  --ink: #0E1B24;
+  --muted: #47606C;
+  --edge: #0E1B24;
+  --shadow: #0E1B24;
+  --dot: #C3DDD8;
+  --wash: #DCEFEC;
+  --pick: #FFE9A3;
+  --good: #12805A;
+  --good-wash: #C9F2DF;
+  --bad: #C62E3B;
+  --bad-wash: #FFD8DC;
+  --accent: #FF4F8B;
+  --on-accent: #0E1B24;
+  --s1: #FF6B5A;
+  --s2: #FFA63D;
+  --s3: #F7D640;
+  --s4: #4BD6A8;
+  --s5: #7C9BFF;
+  --on-stage: #0E1B24;
+  --display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A1822; --surface: #122A3A; --ink: #EAF4F1; --muted: #9CB6C0; --edge: #D4EAF0; --shadow: #030A10;
+    --dot: #16303F; --wash: #17374A; --pick: #4A4012; --good: #4FE0A6; --good-wash: #12392F; --bad: #FF8A93; --bad-wash: #46202A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0A1822; --surface: #122A3A; --ink: #EAF4F1; --muted: #9CB6C0; --edge: #D4EAF0; --shadow: #030A10;
+  --dot: #16303F; --wash: #17374A; --pick: #4A4012; --good: #4FE0A6; --good-wash: #12392F; --bad: #FF8A93; --bad-wash: #46202A;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--dot) 1.2px, transparent 1.4px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.5;
+  padding-inline: 16px;
+  padding-block: 0 56px;
+}
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { font-family: var(--display); font-weight: 800; line-height: 1.05; letter-spacing: -0.01em; text-wrap: balance; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.mono { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; }
+.wrap { max-width: 920px; margin-inline: auto; }
+.narrow { max-width: 700px; margin-inline: auto; display: grid; gap: 18px; }
+
+/* top bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; display: flex; align-items: center; gap: 12px; padding-block: 12px; background: var(--bg); }
+.brand { display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 4px 0; cursor: pointer; font-family: var(--display); font-weight: 800; font-size: 1.3rem; letter-spacing: -0.02em; }
+.brand svg { width: 32px; height: 32px; flex: none; }
+.spacer { flex: 1; }
+.xp { display: inline-flex; gap: 8px; align-items: baseline; padding: 4px 12px; background: var(--s3); color: var(--on-stage); border: 2.5px solid var(--edge); border-radius: 999px; box-shadow: 2px 2px 0 var(--shadow); font-family: var(--mono); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; }
+.xp b { font-size: 1rem; font-variant-numeric: tabular-nums; }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; background: var(--surface); color: var(--ink); border: 2.5px solid var(--edge); border-radius: 999px; box-shadow: 3px 3px 0 var(--shadow); font-family: var(--display); font-weight: 800; font-size: 1rem; cursor: pointer; transition: transform .08s, box-shadow .08s; }
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--shadow); }
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
+.btn.big { padding: 14px 28px; font-size: 1.15rem; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 3px 3px 0 var(--shadow); }
+.btn.ghost { box-shadow: none; padding: 8px 16px; font-size: 0.92rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* hero */
+.hero { display: grid; gap: 24px; align-items: center; padding-block: 12px 30px; }
+@media (min-width: 800px) { .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 40px; } }
+.hero-copy { display: grid; gap: 16px; justify-items: start; }
+.tag { display: inline-block; padding: 3px 10px; background: var(--s4); color: var(--on-stage); border: 2.5px solid var(--edge); border-radius: 8px; font-family: var(--mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; transform: rotate(-2deg); }
+.hero h1 { font-size: clamp(2.5rem, 8vw, 4.2rem); line-height: 0.98; }
+.lede { font-size: 1.1rem; color: var(--muted); max-width: 40ch; }
+.hero-art svg { width: 100%; height: auto; display: block; overflow: visible; }
+.bob { animation: bob 1.8s ease-in-out infinite; transform-box: fill-box; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+/* level map */
+.map { display: grid; gap: 14px; }
+.map h2 { font-size: 1.6rem; }
+.lvl { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; width: calc(100% - var(--off)); margin-inline-start: var(--off); text-align: left; padding: 14px; background: var(--surface); color: var(--ink); border: 2.5px solid var(--edge); border-radius: 16px; box-shadow: 4px 4px 0 var(--shadow); cursor: pointer; transition: transform .08s, box-shadow .08s; }
+.lvl:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--shadow); }
+.lvl:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+.lvl-n { display: grid; place-items: center; width: 50px; height: 50px; background: var(--c); color: var(--on-stage); border: 2.5px solid var(--edge); border-radius: 12px; font-family: var(--display); font-weight: 800; font-size: 1.6rem; }
+.lvl-body { display: grid; gap: 2px; min-width: 0; }
+.lvl-name { font-family: var(--display); font-weight: 800; font-size: 1.3rem; line-height: 1.1; }
+.lvl-sub, .lvl-case { font-size: 0.86rem; color: var(--muted); }
+.lock { width: 26px; height: 26px; }
+.stars { display: inline-flex; gap: 2px; }
+.star { fill: none; stroke: var(--edge); stroke-width: 1.6; stroke-linejoin: round; }
+.star.on { fill: var(--s3); }
+
+/* panels */
+.sticker { background: var(--surface); border: 2.5px solid var(--edge); border-radius: 16px; box-shadow: 4px 4px 0 var(--shadow); padding: 16px 18px; }
+.back { align-self: start; justify-self: start; }
+.stage-head { display: flex; align-items: center; gap: 14px; }
+.badge-n { display: grid; place-items: center; flex: none; width: 64px; height: 64px; background: var(--c); color: var(--on-stage); border: 2.5px solid var(--edge); border-radius: 16px; box-shadow: 3px 3px 0 var(--shadow); font-family: var(--display); font-weight: 800; font-size: 2.2rem; transform: rotate(-4deg); }
+.stage-head h2 { font-size: clamp(2rem, 7vw, 2.8rem); }
+.stage-head .mono { color: var(--muted); margin-top: 4px; }
+.mission { display: grid; gap: 6px; background: var(--pick); }
+.mission b { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.pts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.pt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; }
+.pt .face { width: 56px; height: 56px; }
+.pt-name { font-family: var(--display); font-weight: 800; font-size: 1.2rem; line-height: 1.1; }
+.pt-meta { color: var(--muted); font-size: 0.84rem; margin-top: 2px; }
+.pt-quote { margin-top: 8px; font-size: 0.95rem; }
+.ready { display: grid; gap: 10px; }
+.ready h3 { font-size: 1.3rem; }
+.chips { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.chip { padding: 12px 14px; text-align: center; background: var(--surface); border: 2.5px solid var(--edge); border-radius: 14px; box-shadow: 3px 3px 0 var(--shadow); font-family: var(--display); font-weight: 800; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--pick); transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
+.skills { display: flex; flex-wrap: wrap; gap: 8px; }
+.skill { padding: 3px 10px; background: var(--wash); border: 2px solid var(--edge); border-radius: 999px; font-size: 0.82rem; font-weight: 700; }
+
+/* play */
+.playbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dots { display: flex; gap: 6px; flex: 1; min-width: 80px; }
+.dot { flex: 1; height: 10px; max-width: 48px; background: var(--surface); border: 2px solid var(--edge); border-radius: 999px; }
+.dot.done { background: var(--c); }
+.dot.now { background: var(--pick); }
+.chat { display: grid; gap: 12px; }
+.row { display: flex; gap: 10px; align-items: flex-end; }
+.row.me { justify-content: flex-end; }
+.avatar { flex: none; width: 46px; height: 46px; }
+.face { display: block; }
+.bubble { min-width: 0; max-width: min(100%, 540px); padding: 12px 16px; background: var(--surface); border: 2.5px solid var(--edge); border-radius: 18px 18px 18px 4px; box-shadow: 3px 3px 0 var(--shadow); }
+.bubble.me { background: var(--wash); border-radius: 18px 18px 4px 18px; }
+.bubble .gloss { display: block; margin-top: 6px; font-size: 0.86rem; color: var(--muted); }
+.who { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.thinks { align-self: flex-end; padding: 3px 12px; background: var(--s2); color: var(--on-stage); border: 2px solid var(--edge); border-radius: 999px; font-size: 0.82rem; font-weight: 700; justify-self: end; }
+.prompt { font-family: var(--display); font-weight: 800; font-size: 1.25rem; line-height: 1.15; }
+.opts { display: grid; gap: 10px; }
+.opt { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; padding: 13px 16px; text-align: left; background: var(--surface); color: var(--ink); border: 2.5px solid var(--edge); border-radius: 14px; box-shadow: 3px 3px 0 var(--shadow); cursor: pointer; transition: transform .08s, box-shadow .08s; }
+.opt:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--shadow); }
+.opt:disabled { cursor: default; }
+.opt.sel { background: var(--pick); }
+.opt.right { background: var(--good-wash); }
+.opt.wrong { background: var(--bad-wash); }
+.opt.faded { opacity: 0.6; }
+.opt .tagc { font-family: var(--mono); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.opt.right .tagc { color: var(--good); }
+.opt.wrong .tagc { color: var(--bad); }
+.line { justify-self: end; max-width: min(100%, 520px); }
+.slot { display: grid; gap: 8px; }
+.slot-label { font-family: var(--mono); font-size: 0.74rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.fb { display: grid; gap: 8px; padding: 14px 16px; border: 2.5px solid var(--edge); border-radius: 14px; background: var(--surface); box-shadow: 3px 3px 0 var(--shadow); }
+.fb.good { background: var(--good-wash); }
+.fb.bad { background: var(--bad-wash); }
+.fb b { font-family: var(--display); font-weight: 800; font-size: 1.15rem; }
+.fb .try { font-size: 0.95rem; }
+.fb .try span { display: block; font-family: var(--mono); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.react { font-style: italic; color: var(--muted); }
+.meter-wrap { display: grid; gap: 6px; }
+.meter-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.meter { height: 16px; background: var(--surface); border: 2.5px solid var(--edge); border-radius: 999px; overflow: hidden; }
+.meter i { display: block; height: 100%; width: var(--w); background: var(--c); transition: width .4s; }
+.flowtop { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.flowtop .face { width: 54px; height: 54px; flex: none; }
+.flowtop .meter-wrap { flex: 1; min-width: 150px; }
+.streak { padding: 3px 12px; background: var(--s5); color: var(--on-stage); border: 2px solid var(--edge); border-radius: 999px; font-family: var(--mono); font-size: 0.78rem; font-weight: 700; }
+.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: 0.9rem; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+.timer { height: 12px; background: var(--surface); border: 2.5px solid var(--edge); border-radius: 999px; overflow: hidden; }
+.timer i { display: block; height: 100%; width: 100%; background: var(--accent); }
+.preview { min-height: 3.2em; }
+
+/* result */
+.result { display: grid; gap: 18px; justify-items: start; }
+.result h2 { font-size: clamp(2rem, 7vw, 3rem); }
+.bigstars .star { width: 56px; height: 56px; }
+.stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); width: 100%; }
+.stat { display: grid; gap: 2px; }
+.stat b { font-family: var(--display); font-weight: 800; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 0.86rem; }
+.calib { width: 100%; }
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 30; }
+.confetti span { position: absolute; top: -20px; width: 10px; height: 16px; border: 2px solid var(--edge); border-radius: 3px; animation: fall 2.2s ease-in forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+/* mastery */
+.rows { display: grid; gap: 10px; width: 100%; }
+.mrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.mrow .lvl-n { width: 40px; height: 40px; font-size: 1.2rem; border-radius: 10px; }
+textarea { width: 100%; padding: 12px 14px; background: var(--surface); color: var(--ink); border: 2.5px solid var(--edge); border-radius: 14px; font: inherit; resize: vertical; }
+.about { margin-top: 36px; }
+.about summary { cursor: pointer; font-family: var(--display); font-weight: 800; font-size: 1.1rem; }
+.about .body { display: grid; gap: 10px; margin-top: 12px; color: var(--muted); font-size: 0.92rem; max-width: 70ch; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+(function () {
+'use strict';
+
+/* ---------- content ---------- */
+var P = {
+  ahmad: { name: 'Ahmad Zainal', age: 45, job: 'Construction worker', no: 1, color: '#FFB35C', concern: 'I have a constant dull ache in my lower right jaw.' },
+  lim: { name: 'Lim Kok Leong', age: 23, job: 'Retail sales associate', no: 6, color: '#8FD0FF', concern: 'My girlfriend says my breath stinks and my teeth look gross. I don\'t really care, but she insisted I come.' },
+  nurul: { name: 'Nurul Izzati', age: 41, job: 'Freelance writer', no: 10, color: '#F6A6C8', concern: 'I haven\'t been to a dentist in over 20 years because I\'m terrified. My husband made this appointment for me, but I\'m not sure I can go through with it.' },
+  siti: { name: 'Siti Aisha', age: 35, job: 'Software engineer', no: 11, color: '#A8E6A1', concern: 'I need a dental check-up, but I\'m fasting for Ramadan. Can we work around this?' },
+  chen: { name: 'Chen Jia Yi', age: 30, job: 'Marketing executive', no: 8, color: '#FFD76B', concern: 'I\'m getting married in three months and I want a perfect smile for my wedding photos.' },
+  priya: { name: 'Priya Nair', age: 42, job: 'Marketing manager', no: 5, color: '#C9B6FF', concern: 'I\'m extremely unhappy with the care I\'ve received here. I think I\'ve been discriminated against and want to file a complaint.' }
+};
+
+var LEVELS = [
+{
+  n: 1, name: 'Blind Spots', burch: 'Unconscious incompetence', dreyfus: 'Novice', color: 'var(--s1)', type: 'spot',
+  cases: 'Case 1 · Ahmad Zainal', pts: [P.ahmad],
+  feel: 'You do not yet see what you are missing. Everything feels fine from the inside, which is exactly why slips go unnoticed.',
+  mission: 'Read four short exchanges. In each, one line from the student creates a blind spot. Tap it before the student does anything else.',
+  takeaway: 'You cannot fix what you cannot see. Feedback from patients, simulated patients and peers is what makes blind spots visible.',
+  skills: ['Plain language', 'Respect without judgment', 'Hearing cost concerns'],
+  rounds: [
+    { say: 'Why do I have a dull ache in my jaw?', felt: 'I explained it precisely.',
+      lines: ['Good morning, Encik Ahmad. Thanks for coming in.', 'From your history, this is likely pulpal inflammation, possibly irreversible pulpitis secondary to caries progression.', 'I will examine the area now so we can look for the cause together.'], slip: 1,
+      why: 'He asked in everyday words and got jargon back. A patient who is lost often will not say so, and may look confused or go quiet.',
+      fix: 'It may be that a tooth is badly inflamed on the inside. Let me check, and I will explain what I find.' },
+    { say: 'Is smoking affecting my dental health?', felt: 'I was only being honest.',
+      lines: ['Yes, it is. Smoking affects your gums and healing, so it matters for your mouth.', 'Honestly, if you did not smoke, you probably would not be sitting here today.', 'If you are open to it, I would like to talk about smoking with you.'], slip: 1,
+      why: 'The facts may be true, but the tone blames him. A judged patient tends to become defensive and stop sharing.',
+      fix: 'Yes, smoking does affect gums and healing. Can I share what it means for your teeth, and hear how you see it?' },
+    { say: 'Berapa kos treatment ni? Saya ada anak dua lagi sekolah.', gloss: 'In English: How much will this treatment cost? I have two more children in school.', felt: 'I kept us on track.',
+      lines: ['I understand that cost is a real concern for your family.', 'Let us first find the cause. Then I will go through the options and what each one costs.', 'Do not worry about that for now. Let us just focus on the tooth.'], slip: 2,
+      why: 'Telling him not to worry brushes aside a real barrier. Unaddressed cost worries tend to show up as rising anxiety or missed treatment.',
+      fix: 'That is an important question. Once we know what the tooth needs, I will go through the options and costs with you before we decide anything.' },
+    { say: 'Doktor, boleh tak explain dalam Bahasa Malaysia? English saya tak berapa bagus.', gloss: 'In English: Doctor, can you explain in Bahasa Malaysia? My English is not very good.', felt: 'I said yes, so that is handled.',
+      lines: ['Boleh, Encik Ahmad. Saya terangkan dalam Bahasa Malaysia.', 'So the aetiology is likely multifactorial, but we can proceed to radiographs and take it from there.', 'Beritahu saya kalau ada yang tidak jelas.'], slip: 1,
+      why: 'The promise was kept for one sentence, then dropped. Language and level both slipped, and the patient was left to catch up.',
+      fix: 'Sakit ini mungkin datang dari gigi yang radang di dalam. Saya akan ambil gambar X-ray untuk lihat dengan jelas.' }
+  ]
+},
+{
+  n: 2, name: 'Mirror Moment', burch: 'Conscious incompetence', dreyfus: 'Advanced beginner', color: 'var(--s2)', type: 'mirror',
+  cases: 'Case 6 · Lim Kok Leong', pts: [P.lim],
+  feel: 'Now you can see the gap, and that can feel uncomfortable. This is where real learning starts.',
+  mission: 'Each round shows what the student said and how the patient felt. Name the gap, then pick the better reply.',
+  takeaway: 'Naming the gap is the first win. Aim to ask before telling, and to check how your words landed.',
+  skills: ['Asking before telling', 'Respecting autonomy', 'Small, doable goals'],
+  rounds: [
+    { say: 'Look, I\'m only here because my girlfriend threatened to dump me. I feel fine.', said: 'Your gums are bleeding and you have cavities, so you do not feel fine. You need to take this seriously.', felt: 'I felt told off. I stopped listening.',
+      gaps: ['Telling him what to feel instead of exploring his view', 'Using too much medical jargon', 'Skipping the clinical examination'],
+      rews: ['It sounds like coming in was not really your idea. What would you like to get out of today?', 'I understand, but untreated gum disease can lead to losing teeth.', 'Fine. Let us just do a quick clean and be done.'],
+      why: 'He arrives with outside pressure and little motivation of his own. Arguing closes the door. A curious question can open it.' },
+    { say: 'Do I really need to floss? It seems like a waste of time.', said: 'Yes, you must floss every day. All dentists say so.', felt: 'Another order. It felt like I had no say.',
+      gaps: ['Giving instructions without asking permission or offering a choice', 'Asking too many questions', 'Using vague language'],
+      rews: ['Can I share what flossing does for the bleeding you have? Then you tell me what feels doable.', 'Flossing is optional, so do not worry about it.', 'You are an adult, so it is your decision and your problem.'],
+      why: 'Ask, tell, ask. Seek permission, give the information, then check his view. It respects the autonomy he is asserting.' },
+    { say: 'Is there any way to make my breath better without changing my habits?', said: 'No. Your breath smells because of plaque, smoking and what you eat.', felt: 'It was true, but it sounded like an attack.',
+      gaps: ['Honest facts with no empathy and no way forward', 'Leaving out the examination findings', 'Offering too many options'],
+      rews: ['Some of it we can improve quickly with a clean. The longer lasting change comes from small steps. Which one would you try first?', 'Mouthwash will cover it up, so just use more of that.', 'That is something to work out after the treatment.'],
+      why: 'Honesty works best with a path attached. A small first step can feel achievable to someone who is not yet convinced.' }
+  ]
+},
+{
+  n: 3, name: 'Build Mode', burch: 'Conscious competence', dreyfus: 'Competent', color: 'var(--s3)', type: 'build',
+  cases: 'Case 10 · Nurul Izzati', pts: [P.nurul],
+  feel: 'You know the techniques and use them on purpose, one at a time. It takes effort and can feel scripted. That is normal at this stage.',
+  mission: 'Build each reply from three moves: acknowledge, inform, and hand back control. Pick one option per move, then send.',
+  takeaway: 'Deliberate practice builds the structure: acknowledge, inform, hand back control. Keep rehearsing until it stops feeling scripted.',
+  skills: ['Trauma informed care', 'Patient control', 'Step by step explanation'],
+  rounds: [
+    { say: 'Can we just talk today without you looking in my mouth?',
+      slots: [
+        { label: 'Acknowledge', opts: ['Yes, that is completely fine. Thank you for telling me what you need.', 'I understand, but we really should look at some point.', 'Many people feel this way, so try not to worry.'], why: 'A clear yes shows she is heard. Reassurance without agreement can feel like pressure.' },
+        { label: 'Inform', opts: ['Today we can sit and talk. I will not examine anything unless you ask me to.', 'The examination only takes a few minutes and is quite painless.', 'We will talk about your history first and then see how it goes.'], why: 'She needs to know exactly what will and will not happen. Vague plans keep anxiety high.' },
+        { label: 'Offer control', opts: ['If you want to pause or leave at any time, just say so. You set the pace.', 'Let me know if you feel any discomfort and I will try to be quick.', 'I will keep going gently and tell you when we are nearly done.'], why: 'Real control means her signal changes what happens next, not just that you hurry.' }
+      ] },
+    { say: 'That dentist 20 years ago just kept going even when I was crying and trying to stop him. How do I know you won\'t do the same?',
+      slots: [
+        { label: 'Acknowledge', opts: ['That should never have happened. I am sorry you went through it.', 'That was a long time ago, and dentistry has changed a lot.', 'I am sure he did not mean to hurt you.'], why: 'Validate the experience first. Explaining it away or defending the dentist invalidates her.' },
+        { label: 'Inform', opts: ['With me, nothing happens without your clear yes, and I will say what comes next before I do it.', 'I am very gentle, and patients usually say they barely notice.', 'I have never had a complaint about this.'], why: 'Describe how this visit will be different in concrete terms. Self praise does not build trust.' },
+        { label: 'Offer control', opts: ['Let us agree a signal now, like raising your hand, and I will stop as soon as I see it.', 'You can tell me to stop and I will see how it goes.', 'I will stop if you cry, but please try to tell me early.'], why: 'A clear stop signal agreed in advance lets her trust you. Putting the burden on her to speak up early does not.' }
+      ] },
+    { say: 'Is it possible to be completely sedated for any treatment?',
+      slots: [
+        { label: 'Acknowledge', opts: ['It makes sense to ask about every option that could make this feel safer.', 'You do not need sedation for a simple check.', 'Everyone asks that, and most people do fine without it.'], why: 'Treat the question as reasonable. Dismissing it signals that her fear is an overreaction.' },
+        { label: 'Inform', opts: ['There are ways to help with anxiety, and sedation can be one of them. What suits you depends on your medical history and medicines, so we would check that together first.', 'Yes, we can put you fully under for anything you like.', 'Sedation is risky, so we only use it as a last resort.'], why: 'Be honest without promising or frightening. Safe options depend on her health and medicines.' },
+        { label: 'Offer control', opts: ['Nothing is decided today. We go at your pace and you choose what happens next.', 'Let us book you in for it and get this over with.', 'We can decide next visit, once I have looked at your teeth.'], why: 'Keep the decision with her. Rushing or conditioning it on an examination takes control away.' }
+      ] }
+  ]
+},
+{
+  n: 4, name: 'Flow State', burch: 'Unconscious competence', dreyfus: 'Proficient', color: 'var(--s4)', type: 'flow',
+  cases: 'Cases 11 and 8 · Siti Aisha, Chen Jia Yi', pts: [P.siti, P.chen],
+  feel: 'The basics now run on their own, so your attention moves from the checklist to the person in front of you.',
+  mission: 'Answer fast. Each patient\'s mood moves with your choices, and best answers in a row build a streak. Relaxed mode turns the timer off.',
+  takeaway: 'When the basics run on their own, your attention moves to the person in front of you.',
+  skills: ['Cultural humility', 'Expectation management', 'Honest uncertainty'],
+  rounds: [
+    { p: 0, say: 'Assalamualaikum. I\'m currently fasting for Ramadan. What treatments are permissible during this time?', opts: [
+      { t: 'Waalaikumsalam. Thank you for telling me. Let us look at what can be done safely and what can wait until after Ramadan.', v: 2, why: 'Returns the greeting, thanks her, and plans around her fasting.' },
+      { t: 'Hello. Most things are fine during fasting, so we can go ahead.', v: 1, why: 'Friendly, but it assumes. Ask what she needs and what can wait.' },
+      { t: 'Fasting should not affect anything. Let us start.', v: 0, why: 'Waves away the centre of her question.' } ] },
+    { p: 1, say: 'Can you make my teeth look exactly like this photo?', opts: [
+      { t: 'I can see how much this means to you. Let us look at your teeth together and talk about what is realistically achievable.', v: 2, why: 'Acknowledges the stakes and sets honest expectations without shutting her down.' },
+      { t: 'We can get close, but nothing is guaranteed.', v: 1, why: 'Honest, but cold. It leaves out her hopes and the next step.' },
+      { t: 'Yes, we can make it look exactly like that.', v: 0, why: 'Promises an outcome you cannot guarantee.' } ] },
+    { p: 0, say: 'Do you have any female dentists available?', opts: [
+      { t: 'Thank you for asking. Let me check who is available and find the best option for you.', v: 2, why: 'Treats the preference seriously and starts to act on it.' },
+      { t: 'We can try, but it may mean a longer wait.', v: 1, why: 'Honest, but it frames her request as an inconvenience.' },
+      { t: 'I am fully qualified, so you will be in good hands.', v: 0, why: 'Answers a question she did not ask and ignores her preference.' } ] },
+    { p: 1, say: 'How quickly can we get this done before my wedding?', opts: [
+      { t: 'Three months is a useful window. Let me map what each option would need so we can plan around your date.', v: 2, why: 'Respects the deadline and promises a concrete plan, not a promise of speed.' },
+      { t: 'It depends. Let us see after your exam.', v: 1, why: 'True, but it gives her nothing to hold on to.' },
+      { t: 'Do not worry, we can rush it all into a couple of visits.', v: 0, why: 'Over promises and encourages a rushed plan.' } ] },
+    { p: 0, say: 'Are the ingredients in teeth whitening treatments halal?', opts: [
+      { t: 'That is an important question. I do not want to guess, so I will check the product information with you, and you can also ask your religious advisor.', v: 2, why: 'Honest about what you do not know and respects her faith and her advisor.' },
+      { t: 'I think most of them are, but I am not sure.', v: 1, why: 'A guess is not enough on a question of faith.' },
+      { t: 'Ingredients are not really something you need to worry about.', v: 0, why: 'Dismisses a concern that matters to her.' } ] },
+    { p: 1, say: 'Will these procedures damage my teeth in the long run?', opts: [
+      { t: 'Fair question. Each option has trade-offs for your teeth. I will go through them so you can choose what suits you.', v: 2, why: 'Honest about trade-offs and invites a shared decision.' },
+      { t: 'Some options remove a little enamel, but they are generally safe.', v: 1, why: 'Accurate in outline, but it gives her no choice in the conversation.' },
+      { t: 'No, there is no risk at all.', v: 0, why: 'Absolute claims are rarely true and break trust later.' } ] }
+  ]
+},
+{
+  n: 5, name: 'Master Class', burch: 'Beyond Burch: reflective mastery', dreyfus: 'Expert', color: 'var(--s5)', type: 'branch',
+  cases: 'Case 5 · Priya Nair', pts: [P.priya],
+  feel: 'You handle messy situations flexibly, reflect while you act, and help others improve. There is rarely one perfect line.',
+  mission: 'Lead a tense consultation. Your choices move the tension meter and change what the patient says next. Then coach a peer.',
+  takeaway: 'Mastery means staying flexible under pressure, reflecting as you go, and helping others grow.',
+  skills: ['De-escalation', 'Accountability without defensiveness', 'Coaching a peer'],
+  turns: [
+    { calm: { say: 'Do you treat all your patients this way, or just people like me?', opts: [
+        { t: 'Thank you for saying that out loud. It is a serious concern and I want to hear exactly what happened, in your words. Where would you like to start?', s: 3, d: -25, react: 'Her arms uncross for a moment. "Fine. Since you ask, here is what happened."', why: 'Names the concern without defending and invites her account.' },
+        { t: 'I treat every patient to the same standard. I can assure you there was no discrimination.', s: 1, d: -5, react: 'Her jaw tightens. "That is what everyone says."', why: 'A reassurance can sound like dismissal when trust is low. It defends before it listens.' },
+        { t: 'My colleague is very experienced, so I am sure there was a misunderstanding.', s: 0, d: 10, react: 'Her eyes narrow. "So I imagined it?"', why: 'Excuses a colleague and implies she misread the situation. This tends to escalate.' },
+        { t: 'I am sorry you felt that way. Let me look at your tooth first, then we can talk about the rest.', s: 2, d: -10, react: 'She nods stiffly but keeps her arms folded.', why: 'The pivot to her pain helps, but she has not yet been invited to explain.' } ] } },
+    { calm: { say: 'Why wasn\'t I given proper instructions for aftercare?', opts: [
+        { t: 'That sounds frustrating, especially while you are in pain. I will check what instructions were recorded, and I would like us to go through aftercare clearly together now.', s: 3, d: -20, react: 'Her shoulders drop a little. "Thank you. Nobody actually walked me through it."', why: 'Validates, takes ownership of checking, and moves to a joint plan.' },
+        { t: 'The instructions were given, but you did not follow them fully, and that is probably why you are still in pain.', s: 0, d: 15, react: '"So it is my fault?" Her voice rises.', why: 'Facts used as blame. Even if she skipped steps, leading with it confirms her fear of being dismissed.' },
+        { t: 'I will look into the records and come back to you.', s: 2, d: -5, react: '"When?" she asks, still guarded.', why: 'Accountable, but vague and it postpones. Offer something you can do now too.' },
+        { t: 'Let us not look back. What matters is the pain now.', s: 1, d: 0, react: '"It matters that I am in pain, but that is not an answer," she says.', why: 'Redirects, but skips her question. She may feel brushed aside.' } ] },
+      heat: { say: 'Your colleague was dismissive and rushed. Is this your standard of care?', opts: [
+        { t: 'I was not there, so I cannot speak for that visit, but I do hear that you felt rushed and dismissed. I am going to take my time with you today.', s: 3, d: -20, react: 'She exhales slowly. "Okay. Then show me."', why: 'Does not defend or speak for the colleague, acknowledges the feeling, and commits to a change you control.' },
+        { t: 'I cannot comment on a colleague.', s: 1, d: 5, react: '"So you will not answer," she says flatly.', why: 'Correct on one level, but a stonewall reads as closing ranks.' },
+        { t: 'Our clinic gets great feedback, so I doubt that happened.', s: 0, d: 15, react: 'Her voice sharpens. "You are protecting each other."', why: 'Defends the clinic with no curiosity. It invalidates her experience.' },
+        { t: 'I am sorry. I will raise it with the clinic team.', s: 2, d: -5, react: 'She tilts her head. "And then what?"', why: 'An apology and a commitment, though it leaves out her story and what she needs now.' } ] } },
+    { calm: { say: 'What are you going to do to fix this situation?', opts: [
+        { t: 'First I will examine the tooth carefully and explain what I find. Then we agree a plan and a follow-up date together, and I will tell you how to give formal feedback if you wish.', s: 3, d: -20, react: 'She uncrosses her arms. "Okay. I can work with that."', why: 'Concrete steps, shared planning, and respect for her right to raise a formal concern.' },
+        { t: 'I will do my best, but I cannot promise the pain will go away quickly.', s: 1, d: -5, react: '"That is not very reassuring," she says.', why: 'Honest about limits, but with no plan it leaves her with nothing to hold on to.' },
+        { t: 'If you post negative reviews, it will not help your situation.', s: 0, d: 15, react: 'She goes still. "Is that a threat?"', why: 'Reads as a warning. It damages trust and ignores her right to give feedback.' },
+        { t: 'We will review your treatment and see what can be done.', s: 2, d: -10, react: '"Review it how, and when?" she asks.', why: 'Right direction, but vague. Add who, what and when.' } ] },
+      heat: { say: 'I want to feel confident that I\'m getting the same quality care as any other patient here. Can you assure me of that?', opts: [
+        { t: 'I cannot undo how that felt, but I can show you with my actions. Today I will explain each step, check that you are comfortable, and you can ask me anything.', s: 3, d: -20, react: 'Her posture softens. "Alright. Let us go step by step."', why: 'Does not over promise. It shows care through action, which is what rebuilds trust.' },
+        { t: 'Yes, every patient here gets the same care.', s: 1, d: -5, react: '"You said that already," she replies.', why: 'The same reassurance again. Words alone have not worked yet.' },
+        { t: 'I do not think this conversation is productive if you keep accusing us.', s: 0, d: 15, react: 'She picks up her bag. "This is not going anywhere."', why: 'Turns her concern into an accusation and ends the dialogue.' },
+        { t: 'I understand why you need that assurance. Let me start by examining your tooth.', s: 2, d: -10, react: 'She hesitates, then nods. "Fine. Start."', why: 'Acknowledges the need and acts, though a short explanation of what you will do would help.' } ] } }
+  ],
+  coach: { peer: 'The instructions were given, but you did not follow them fully, and that is probably why you are still in pain.', opts: [
+    { t: 'That was wrong. Redo the whole thing and be more careful.', s: 0, why: 'Harsh and vague. It gives your peer no way to improve.' },
+    { t: 'Good job staying calm. Maybe be a bit nicer next time.', s: 1, why: 'Kind, but too general to act on.' },
+    { t: 'You stayed calm, which helped. I noticed you linked her pain to the aftercare she skipped. What do you think she heard? What could you say first so she feels heard?', s: 3, why: 'Names a strength, describes a specific moment, and asks your peer to reflect and plan.' },
+    { t: 'You should have apologised first. Always apologise when a patient is upset.', s: 2, why: 'Useful direction, but a rule given as an order with no space for reflection.' } ] }
+}
+];
+
+/* ---------- helpers ---------- */
+var KEY = 'chair-talk-progress-v1';
+var store = { best: {} };
+try { var raw = localStorage.getItem(KEY); if (raw) { store = JSON.parse(raw) || { best: {} }; if (!store.best) store.best = {}; } } catch (e) { store = { best: {} }; }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+
+var app = document.getElementById('app');
+var S = { screen: 'home', lv: 1, pred: null, i: 0, pts: 0, r: null, mood: 50, streak: 0, maxStreak: 0, tension: 80, relaxed: false, res: null, goal: '' };
+var tmr = null;
+
+function shuf(n) { var a = [], i, j, t; for (i = 0; i < n; i++) a.push(i); for (i = n - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function clamp(v) { return Math.max(0, Math.min(100, v)); }
+function cur() { return LEVELS[S.lv - 1]; }
+function totalXP() { var t = 0; for (var k in store.best) t += store.best[k].xp || 0; return t; }
+function unlocked(n) { return n === 1 || (store.best[n - 1] && store.best[n - 1].stars >= 1); }
+function starsFor(p) { return p >= 85 ? 3 : p >= 60 ? 2 : p >= 40 ? 1 : 0; }
+function maxPts(L) { return L.type === 'spot' ? L.rounds.length : L.type === 'mirror' ? L.rounds.length * 2 : L.type === 'build' ? L.rounds.length * 3 : L.type === 'flow' ? L.rounds.length : 12; }
+function roundCount(L) { return L.type === 'branch' ? 4 : L.rounds.length; }
+
+function face(m, fill) {
+  m = clamp(m);
+  var mouth, brows = '';
+  if (m >= 66) mouth = 'M14 31 Q24 41 34 31';
+  else if (m >= 36) mouth = 'M16 35 L32 35';
+  else { mouth = 'M14 38 Q24 29 34 38'; brows = '<path d="M12 14 L20 18 M36 14 L28 18" stroke="#0E1B24" stroke-width="2.4" stroke-linecap="round" fill="none"/>'; }
+  return '<svg class="face" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="' + fill + '" stroke="var(--edge)" stroke-width="2.5"/><circle cx="17" cy="22" r="2.4" fill="#0E1B24"/><circle cx="31" cy="22" r="2.4" fill="#0E1B24"/>' + brows + '<path d="' + mouth + '" stroke="#0E1B24" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>';
+}
+function starsSvg(n, size) {
+  var s = '';
+  for (var i = 0; i < 3; i++) s += '<svg class="star' + (i < n ? ' on' : '') + '" viewBox="0 0 24 24" width="' + size + '" height="' + size + '" aria-hidden="true"><path d="M12 2.8l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.7 6.1 20.8l1.2-6.5L2.5 9.7l6.6-.9z"/></svg>';
+  return '<span class="stars" role="img" aria-label="' + n + ' of 3 stars">' + s + '</span>';
+}
+var TOOTH = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 8C12 4 5 6 5 13c0 5 2 6 3 10 .6 3 2.2 4 3.2 1.4.8-2 1.2-5 4.8-5s4 3 4.8 5c1 2.6 2.600 1.600 3.200-1.400 1-4 3-5 3-10C27 6 20 4 16 8z" fill="#FFFFFF" stroke="var(--edge)" stroke-width="2" stroke-linejoin="round"/><circle cx="12.500" cy="14" r="1.400" fill="#0E1B24"/><circle cx="19.500" cy="14" r="1.400" fill="#0E1B24"/></svg>';
+var LOCK = '<svg class="lock" viewBox="0 0 24 24" aria-label="Locked" role="img"><rect x="4.500" y="10.500" width="15" height="10" rx="2.500" fill="var(--wash)" stroke="var(--edge)" stroke-width="2"/><path d="M8 10.500V8a4 4 0 0 1 8 0v2.500" fill="none" stroke="var(--edge)" stroke-width="2"/></svg>';
+
+function ladderSvg(curIdx) {
+  var out = '<svg viewBox="0 0 520 280" role="img" aria-label="A five step staircase from stage 1 to stage 5">';
+  for (var i = 0; i < 5; i++) {
+    var x = 10 + i * 100, h = 46 + i * 38, y = 262 - h;
+    out += '<rect x="' + x + '" y="' + y + '" width="100" height="' + h + '" fill="var(--s' + (i + 1) + ')" stroke="var(--edge)" stroke-width="2.5"/>';
+    out += '<text x="' + (x + 50) + '" y="' + (y + 34) + '" text-anchor="middle" font-family="Bricolage Grotesque, Trebuchet MS, sans-serif" font-weight="800" font-size="26" fill="#0E1B24">' + (i + 1) + '</text>';
+  }
+  var cx = 10 + curIdx * 100 + 50, top = 262 - (46 + curIdx * 38);
+  out += '<g class="bob"><g transform="translate(' + (cx - 28) + ',' + (top - 54) + ') scale(1.75)">' + TOOTH.replace(/<svg[^>]*>|<\/svg>/g, '') + '</g></g>';
+  out += '</svg>';
+  return out;
+}
+
+/* ---------- views ---------- */
+function header() {
+  return '<header class="bar"><button class="brand" data-a="home" aria-label="Back to the level map">' + TOOTH + '<span>Chair Talk</span></button><span class="spacer"></span><span class="xp">XP <b>' + totalXP() + '</b></span></header>';
+}
+function patientCard(p, mood) {
+  return '<div class="sticker pt"><div>' + face(mood == null ? 60 : mood, p.color) + '</div><div><div class="pt-name">' + p.name + '</div><div class="pt-meta">' + p.age + ', ' + p.job + ' · Workshop case ' + p.no + '</div><p class="pt-quote">"' + p.concern + '"</p></div></div>';
+}
+
+function viewHome() {
+  var hi = 0, any = false, i;
+  for (i = 1; i <= 5; i++) { if (unlocked(i)) hi = i - 1; if (store.best[i]) any = true; }
+  var nextN = 1;
+  for (i = 1; i <= 5; i++) { if (unlocked(i) && !(store.best[i] && store.best[i].stars >= 1)) { nextN = i; break; } nextN = i; }
+  var cards = '';
+  LEVELS.forEach(function (L, idx) {
+    var lk = !unlocked(L.n), b = store.best[L.n];
+    cards += '<button class="lvl" style="--c:' + L.color + ';--off:' + (idx * 10) + 'px" data-a="open" data-n="' + L.n + '"' + (lk ? ' disabled' : '') + '><span class="lvl-n">' + L.n + '</span><span class="lvl-body"><span class="lvl-name">' + L.name + '</span><span class="lvl-sub">' + L.burch + ' · Dreyfus: ' + L.dreyfus + '</span><span class="lvl-case">' + L.cases + '</span></span><span>' + (lk ? LOCK : starsSvg(b ? b.stars : 0, 22)) + '</span></button>';
+  });
+  var done5 = store.best[5] && store.best[5].stars >= 1;
+  return header() +
+    '<section class="hero"><div class="hero-copy"><span class="tag">Communication skills game</span><h1>Talk your way up the chair.</h1><p class="lede">Five stages from blind spots to reflective mastery. Six patients from your simulated patient workshops. Every choice shows how the patient felt.</p><div class="actions"><button class="btn primary big" data-a="open" data-n="' + nextN + '">' + (any ? 'Continue' : 'Start level 1') + '</button>' + (done5 ? '<button class="btn big" data-a="final">Mastery card</button>' : '') + '</div></div><div class="hero-art">' + ladderSvg(Math.min(4, hi)) + '</div></section>' +
+    '<section class="map"><h2>Level map</h2>' + cards + '</section>' +
+    '<details class="about"><summary>About this game</summary><div class="body">' +
+    '<p>The stages follow the conscious competence model, commonly attributed to Noel Burch at Gordon Training International in the 1970s, and the five stage model of skill acquisition by Dreyfus and Dreyfus (1980). Pairing the two stage by stage, and treating reflective mastery as a fifth stage beyond Burch, are teaching choices made for this game rather than an official alignment.</p>' +
+    '<p>Patient names, backgrounds and lines come from the Semester 4 simulated patient scripts. The student replies are illustrative scripts written for this game, not recordings of real students. Feedback explains communication principles in general terms and is not a substitute for assessment with simulated patients and observers.</p>' +
+    '<p>Progress is saved in this browser only.</p></div></details>';
+}
+
+function viewIntro() {
+  var L = cur(), chips = ['Shaky', 'Okay', 'Ready'], c = '';
+  chips.forEach(function (t, i) { c += '<button class="chip" data-a="pred" data-v="' + i + '" aria-pressed="' + (S.pred === i) + '">' + t + '</button>'; });
+  var pc = '';
+  L.pts.forEach(function (p) { pc += patientCard(p); });
+  var sk = L.skills.map(function (s) { return '<span class="skill">' + s + '</span>'; }).join('');
+  return header() + '<div class="narrow" style="--c:' + L.color + '"><button class="btn ghost back" data-a="home">Level map</button>' +
+    '<div class="stage-head"><span class="badge-n">' + L.n + '</span><div><h2>' + L.name + '</h2><p class="mono">' + L.burch + ' · Dreyfus: ' + L.dreyfus + '</p></div></div>' +
+    '<p>' + L.feel + '</p><div class="sticker mission"><b>Mission</b><p>' + L.mission + '</p></div>' +
+    '<div class="skills">' + sk + '</div><div class="pts">' + pc + '</div>' +
+    '<div class="ready"><h3>How ready do you feel?</h3><p class="lede">Rate yourself before you play. You will see how it compares afterwards.</p><div class="chips">' + c + '</div></div>' +
+    '<div class="actions"><button class="btn primary big" data-a="start"' + (S.pred === null ? ' disabled' : '') + '>' + (S.pred === null ? 'Pick a rating to start' : 'Start level ' + L.n) + '</button></div></div>';
+}
+
+function playbar(L) {
+  var n = roundCount(L), d = '';
+  for (var i = 0; i < n; i++) d += '<span class="dot' + (i < S.i ? ' done' : i === S.i ? ' now' : '') + '"></span>';
+  return '<div class="playbar" style="--c:' + L.color + '"><button class="btn ghost" data-a="home">Quit</button><div class="dots" aria-hidden="true">' + d + '</div><span class="mono">Level ' + L.n + ' · ' + (S.i + 1) + ' of ' + n + '</span></div>';
+}
+function patientRow(p, text, gloss, mood) {
+  return '<div class="row"><div class="avatar">' + face(mood == null ? 60 : mood, p.color) + '</div><div class="bubble"><div class="who">' + p.name + '</div>' + (text.charAt(0) === '"' ? text : '"' + text + '"') + (gloss ? '<span class="gloss">' + gloss + '</span>' : '') + '</div></div>';
+}
+function nextBtn(last) { return '<div class="actions"><button class="btn primary" data-a="next">' + (last ? 'See results' : 'Next') + '</button></div>'; }
+function isLast(L) { return S.i >= roundCount(L) - 1; }
+
+function viewSpot(L) {
+  var R = L.rounds[S.i], st = S.r, p = L.pts[0], done = st.picked !== null, ok = done && st.picked === R.slip, h = '';
+  R.lines.forEach(function (t, i) {
+    var cls = 'opt line';
+    if (done) { if (i === R.slip) cls += ' right'; else if (i === st.picked) cls += ' wrong'; else cls += ' faded'; }
+    h += '<button class="' + cls + '" data-a="spot" data-i="' + i + '"' + (done ? ' disabled' : '') + '><span>' + t + '</span>' + (done && i === R.slip ? '<span class="tagc">The slip</span>' : '') + '</button>';
+  });
+  var fb = done ? '<div class="fb ' + (ok ? 'good' : 'bad') + '" role="status"><b>' + (ok ? 'Nice catch.' : 'Not that one.') + '</b><p>' + R.why + '</p><p class="try"><span>Try instead</span>' + R.fix + '</p></div>' + nextBtn(isLast(L)) : '';
+  return header() + '<div class="narrow">' + playbar(L) + '<div class="chat">' + patientRow(p, R.say, R.gloss) + '<span class="thinks">Student thinks: ' + R.felt + '</span><div class="opts" style="justify-items:end">' + h + '</div></div>' +
+    (done ? '' : '<p class="prompt">Tap the line that creates the blind spot.</p>') + fb + '</div>';
+}
+
+function viewMirror(L) {
+  var R = L.rounds[S.i], st = S.r, p = L.pts[0], g = '', w = '', fb = '';
+  st.go.forEach(function (i) {
+    var cls = 'opt';
+    if (st.gap !== null) { if (i === 0) cls += ' right'; else if (i === st.gap) cls += ' wrong'; else cls += ' faded'; }
+    g += '<button class="' + cls + '" data-a="gap" data-i="' + i + '"' + (st.gap !== null ? ' disabled' : '') + '><span>' + R.gaps[i] + '</span>' + (st.gap !== null && i === 0 ? '<span class="tagc">The gap</span>' : '') + '</button>';
+  });
+  if (st.gap !== null) {
+    st.ro.forEach(function (i) {
+      var cls = 'opt';
+      if (st.rew !== null) { if (i === 0) cls += ' right'; else if (i === st.rew) cls += ' wrong'; else cls += ' faded'; }
+      w += '<button class="' + cls + '" data-a="rew" data-i="' + i + '"' + (st.rew !== null ? ' disabled' : '') + '><span>' + R.rews[i] + '</span>' + (st.rew !== null && i === 0 ? '<span class="tagc">Better</span>' : '') + '</button>';
+    });
+  }
+  if (st.rew !== null) fb = '<div class="fb good" role="status"><b>Mirror check</b><p>' + R.why + '</p></div>' + nextBtn(isLast(L));
+  return header() + '<div class="narrow">' + playbar(L) + '<div class="chat">' + patientRow(p, R.say) +
+    '<div class="row me"><div class="bubble me"><div class="who">Student said</div>"' + R.said + '"</div></div>' +
+    '<div class="row"><div class="avatar">' + face(25, p.color) + '</div><div class="bubble"><div class="who">What the patient felt</div>' + R.felt + '</div></div></div>' +
+    '<p class="prompt">What was the gap?</p><div class="opts">' + g + '</div>' +
+    (st.gap !== null ? '<p class="prompt">Pick the better reply.</p><div class="opts">' + w + '</div>' : '') + fb + '</div>';
+}
+
+function viewBuild(L) {
+  var R = L.rounds[S.i], st = S.r, p = L.pts[0], all = st.sel.every(function (v) { return v !== null; }), h = '', prev = [], correct = 0;
+  R.slots.forEach(function (sl, si) {
+    var o = '';
+    st.ord[si].forEach(function (i) {
+      var cls = 'opt';
+      if (st.sent) { if (i === 0) cls += ' right'; else if (i === st.sel[si]) cls += ' wrong'; else cls += ' faded'; }
+      else if (st.sel[si] === i) cls += ' sel';
+      o += '<button class="' + cls + '" data-a="pick" data-s="' + si + '" data-i="' + i + '"' + (st.sent ? ' disabled' : '') + ' aria-pressed="' + (st.sel[si] === i) + '"><span>' + sl.opts[i] + '</span>' + (st.sent && i === 0 ? '<span class="tagc">Best</span>' : '') + '</button>';
+    });
+    if (st.sel[si] !== null) prev.push(sl.opts[st.sel[si]]);
+    if (st.sent && st.sel[si] === 0) correct++;
+    h += '<div class="slot"><span class="slot-label">' + (si + 1) + '. ' + sl.label + '</span><div class="opts">' + o + '</div>' + (st.sent ? '<p class="react">' + sl.why + '</p>' : '') + '</div>';
+  });
+  var trust = Math.round(correct / 3 * 100), fb = '';
+  if (st.sent) fb = '<div class="fb ' + (correct === 3 ? 'good' : correct === 0 ? 'bad' : '') + '" role="status"><b>' + correct + ' of 3 moves landed</b><div class="meter-wrap"><div class="meter-top"><span class="mono">Trust</span><span class="mono">' + trust + '%</span></div><div class="meter" style="--w:' + trust + '%;--c:' + (correct >= 2 ? 'var(--good)' : 'var(--bad)') + '"><i></i></div></div></div>' + nextBtn(isLast(L));
+  return header() + '<div class="narrow">' + playbar(L) + '<div class="chat">' + patientRow(p, R.say) + '</div><p class="prompt">Build your reply.</p>' + h +
+    '<div class="row me"><div class="bubble me preview"><div class="who">Your reply</div>' + (prev.length ? prev.join(' ') : '<span class="react">Pick one option for each move.</span>') + '</div></div>' +
+    (st.sent ? '' : '<div class="actions"><button class="btn primary" data-a="send"' + (all ? '' : ' disabled') + '>Send reply</button></div>') + fb + '</div>';
+}
+
+function viewFlow(L) {
+  var R = L.rounds[S.i], st = S.r, p = L.pts[R.p], done = st.picked !== null, h = '';
+  st.ord.forEach(function (i) {
+    var o = R.opts[i], cls = 'opt';
+    if (done) { if (o.v === 2) cls += ' right'; else if (i === st.picked) cls += ' wrong'; else cls += ' faded'; }
+    h += '<button class="' + cls + '" data-a="flow" data-i="' + i + '"' + (done ? ' disabled' : '') + '><span>' + o.t + '</span>' + (done && o.v === 2 ? '<span class="tagc">Best</span>' : '') + '</button>';
+  });
+  var mc = S.mood >= 60 ? 'var(--good)' : S.mood >= 35 ? 'var(--s3)' : 'var(--bad)';
+  var timer = (!S.relaxed && !done) ? '<div class="timer" aria-hidden="true"><i id="tbar" style="width:' + Math.max(0, st.ms / 120) + '%"></i></div>' : '';
+  var fb = '';
+  if (done) {
+    var o = st.picked >= 0 ? R.opts[st.picked] : null, best = R.opts[0];
+    R.opts.forEach(function (x) { if (x.v === 2) best = x; });
+    fb = '<div class="fb ' + (o && o.v === 2 ? 'good' : o && o.v === 1 ? '' : 'bad') + '" role="status"><b>' + (st.picked === -1 ? 'Time ran out.' : o.v === 2 ? 'Smooth.' : o.v === 1 ? 'Okay, not the best.' : 'That landed badly.') + '</b><p>' + (o ? o.why : 'The patient waited and the moment passed. The best answer: ' + best.why) + '</p></div>' + nextBtn(isLast(L));
+  }
+  return header() + '<div class="narrow">' + playbar(L) +
+    '<div class="flowtop">' + face(S.mood, p.color) + '<div class="meter-wrap"><div class="meter-top"><span class="mono">' + p.name + ' mood</span><span class="mono">' + S.mood + '</span></div><div class="meter" style="--w:' + S.mood + '%;--c:' + mc + '"><i></i></div></div><span class="streak">Streak ' + S.streak + '</span></div>' +
+    '<label class="toggle"><input type="checkbox" id="relaxed"' + (S.relaxed ? ' checked' : '') + '> Relaxed mode, no timer</label>' + timer +
+    '<div class="chat">' + patientRow(p, R.say, null, S.mood) + '</div><div class="opts">' + h + '</div>' + fb + '</div>';
+}
+
+function tensionBar() {
+  var c = S.tension > 65 ? 'var(--bad)' : S.tension > 40 ? 'var(--s3)' : 'var(--good)';
+  return '<div class="meter-wrap"><div class="meter-top"><span class="mono">Tension</span><span class="mono">' + S.tension + '</span></div><div class="meter" style="--w:' + S.tension + '%;--c:' + c + '"><i></i></div></div>';
+}
+var SCORE_TAG = ['Escalates', 'Weak', 'Decent', 'Best move'];
+
+function viewBranch(L) {
+  var st = S.r, p = L.pts[0], h = '', fb = '', body;
+  if (S.i < 3) {
+    var T = L.turns[S.i][st.v], done = st.picked !== null;
+    st.ord.forEach(function (i) {
+      var o = T.opts[i], cls = 'opt';
+      if (done) { if (i === st.picked) cls += o.s >= 2 ? ' right' : ' wrong'; else cls += ' faded'; }
+      h += '<button class="' + cls + '" data-a="br" data-i="' + i + '"' + (done ? ' disabled' : '') + '><span>' + o.t + '</span>' + (done ? '<span class="tagc">' + SCORE_TAG[o.s] + '</span>' : '') + '</button>';
+    });
+    var chosen = done ? T.opts[st.picked] : null;
+    if (done) fb = '<div class="row me"><div class="bubble me"><div class="who">You said</div>"' + chosen.t + '"</div></div><p class="react">' + chosen.react + '</p><div class="fb ' + (chosen.s >= 2 ? 'good' : 'bad') + '" role="status"><b>' + SCORE_TAG[chosen.s] + '</b><p>' + chosen.why + '</p></div>' + nextBtn(false);
+    body = '<div class="chat">' + patientRow(p, T.say, null, 100 - S.tension) + '</div>' + (done ? '' : '<p class="prompt">What do you say?</p>') + '<div class="opts">' + (done ? '' : h) + '</div>' + fb;
+    if (done) body = '<div class="chat">' + patientRow(p, T.say, null, 100 - S.tension) + '</div>' + fb;
+  } else {
+    var C = L.coach, done2 = st.picked !== null;
+    st.ord.forEach(function (i) {
+      var o = C.opts[i], cls = 'opt';
+      if (done2) { if (o.s === 3) cls += ' right'; else if (i === st.picked) cls += ' wrong'; else cls += ' faded'; }
+      h += '<button class="' + cls + '" data-a="coach" data-i="' + i + '"' + (done2 ? ' disabled' : '') + '><span>' + o.t + '</span>' + (done2 && o.s === 3 ? '<span class="tagc">Best</span>' : '') + '</button>';
+    });
+    if (done2) { var co = C.opts[st.picked]; fb = '<div class="fb ' + (co.s >= 2 ? 'good' : 'bad') + '" role="status"><b>' + (co.s === 3 ? 'Strong coaching.' : 'Room to grow.') + '</b><p>' + co.why + '</p></div>' + nextBtn(true); }
+    body = '<div class="sticker mission"><b>Coach a peer</b><p>A classmate replied to Priya like this. You are giving them feedback.</p></div><div class="row me"><div class="bubble me"><div class="who">Peer said</div>"' + C.peer + '"</div></div><p class="prompt">Which feedback would you give?</p><div class="opts">' + h + '</div>' + fb;
+  }
+  return header() + '<div class="narrow">' + playbar(L) + tensionBar() + body + '</div>';
+}
+
+function viewPlay() {
+  var L = cur();
+  return L.type === 'spot' ? viewSpot(L) : L.type === 'mirror' ? viewMirror(L) : L.type === 'build' ? viewBuild(L) : L.type === 'flow' ? viewFlow(L) : viewBranch(L);
+}
+
+function viewResult() {
+  var L = cur(), r = S.res, heads = ['Not yet.', 'Cleared, with room to grow.', 'Solid work.', 'Smooth. This stage feels natural.'], sub = ['The patient needed more from you. Replay to unlock the next stage.', 'You moved on. Replaying will sharpen the moments that slipped.', 'A few moments are worth revisiting, but the stage is yours.', 'You read the patient and responded well throughout.'];
+  var names = ['Shaky', 'Okay', 'Ready'], act = r.pct >= 80 ? 2 : r.pct >= 50 ? 1 : 0, cal;
+  if (S.pred === act) cal = 'You rated yourself ' + names[S.pred] + ' and the result matches. Accurate self assessment is a skill worth building.';
+  else if (S.pred > act) cal = 'You rated yourself ' + names[S.pred] + ', and the result reads closer to ' + names[act] + '. Self ratings can run ahead of observed performance, which is why outside feedback matters.';
+  else cal = 'You rated yourself ' + names[S.pred] + ', and the result reads closer to ' + names[act] + '. You may be doing better than you think.';
+  var more = L.n < 5 && r.stars >= 1;
+  var btns = '';
+  if (L.n === 5 && r.stars >= 1) btns += '<button class="btn primary big" data-a="final">See your mastery card</button>';
+  if (more) btns += '<button class="btn primary big" data-a="open" data-n="' + (L.n + 1) + '">Next level</button>';
+  btns += '<button class="btn" data-a="open" data-n="' + L.n + '">Replay</button><button class="btn" data-a="home">Level map</button>';
+  var extra = L.type === 'branch' ? '<div class="stat"><b>' + S.tension + '</b><span>Final tension</span></div>' : L.type === 'flow' ? '<div class="stat"><b>' + S.maxStreak + '</b><span>Best streak</span></div>' : '';
+  return header() + '<div class="narrow"><div class="result" style="--c:' + L.color + '"><span class="tag">Level ' + L.n + ' · ' + L.name + '</span><div class="bigstars">' + starsSvg(r.stars, 56) + '</div><h2>' + heads[r.stars] + '</h2><p>' + sub[r.stars] + '</p>' +
+    '<div class="stats"><div class="sticker stat"><b>' + r.pct + '%</b><span>Score</span></div><div class="sticker stat"><b>+' + r.xp + '</b><span>XP earned</span></div>' + (extra ? '<div class="sticker stat">' + extra + '</div>' : '') + '</div>' +
+    '<div class="sticker calib"><p class="mono">Self rating check</p><p>' + cal + '</p></div>' +
+    '<div class="sticker calib"><p class="mono">Takeaway</p><p>' + L.takeaway + '</p></div>' +
+    '<div class="actions">' + btns + '</div></div></div>';
+}
+
+function summaryText() {
+  var t = 'Chair Talk progress\n', i;
+  for (i = 1; i <= 5; i++) { var b = store.best[i]; t += 'Level ' + i + ' ' + LEVELS[i - 1].name + ': ' + (b ? b.stars + ' of 3 stars, ' + b.pct + ' percent' : 'not played') + '\n'; }
+  t += 'Total XP: ' + totalXP() + '\n';
+  if (S.goal) t += 'My next goal: ' + S.goal + '\n';
+  return t;
+}
+function viewFinal() {
+  var rows = '';
+  LEVELS.forEach(function (L) {
+    var b = store.best[L.n];
+    rows += '<div class="mrow" style="--c:' + L.color + '"><span class="lvl-n">' + L.n + '</span><span class="lvl-body"><span class="lvl-name">' + L.name + '</span><span class="lvl-sub">' + L.burch + '</span></span>' + starsSvg(b ? b.stars : 0, 22) + '</div>';
+  });
+  return header() + '<div class="narrow"><button class="btn ghost back" data-a="home">Level map</button><span class="tag">Mastery card</span><h2 style="font-size:clamp(2rem,7vw,3rem)">You have climbed the ladder.</h2>' +
+    '<p>Mastery is not an end point. The practitioners who keep improving keep asking for feedback, reflect on what happened, and help others learn. Take it into your next simulated patient session.</p>' +
+    '<div class="sticker rows">' + rows + '<p class="mono">Total XP ' + totalXP() + '</p></div>' +
+    '<div class="ready"><h3>Set one goal for your next session</h3><label for="goal" class="lede">Write one specific thing you will try, for example asking permission before giving advice.</label><textarea id="goal" rows="3">' + S.goal + '</textarea></div>' +
+    '<div class="ready"><h3>Your summary</h3><textarea id="summary" rows="8" readonly>' + summaryText() + '</textarea><div class="actions"><button class="btn primary" data-a="copy">Copy summary</button></div><p id="copied" class="react" aria-live="polite"></p></div></div>';
+}
+
+function render() {
+  app.innerHTML = S.screen === 'home' ? viewHome() : S.screen === 'intro' ? viewIntro() : S.screen === 'play' ? viewPlay() : S.screen === 'result' ? viewResult() : viewFinal();
+}
+
+/* ---------- game flow ---------- */
+function stopTimer() { if (tmr) { clearInterval(tmr); tmr = null; } }
+function startTimer() {
+  stopTimer();
+  tmr = setInterval(function () {
+    if (!S.r || S.r.picked !== null) { stopTimer(); return; }
+    S.r.ms -= 100;
+    var bar = document.getElementById('tbar');
+    if (bar) bar.style.width = Math.max(0, S.r.ms / 120) + '%';
+    if (S.r.ms <= 0) { stopTimer(); flowPick(-1); }
+  }, 100);
+}
+function startRound() {
+  var L = cur(); stopTimer();
+  if (L.type === 'spot') S.r = { picked: null };
+  else if (L.type === 'mirror') S.r = { gap: null, rew: null, go: shuf(3), ro: shuf(3) };
+  else if (L.type === 'build') S.r = { sel: [null, null, null], sent: false, ord: [shuf(3), shuf(3), shuf(3)] };
+  else if (L.type === 'flow') S.r = { picked: null, ord: shuf(3), ms: 12000 };
+  else S.r = { picked: null, v: S.i === 0 ? 'calm' : (S.tension <= 60 ? 'calm' : 'heat'), ord: shuf(4) };
+  render();
+  if (L.type === 'flow' && !S.relaxed) startTimer();
+  window.scrollTo(0, 0);
+}
+function startLevel() {
+  S.i = 0; S.pts = 0; S.mood = 50; S.streak = 0; S.maxStreak = 0; S.tension = 80; S.screen = 'play';
+  startRound();
+}
+function flowPick(i) {
+  var L = cur(), R = L.rounds[S.i];
+  if (S.r.picked !== null) return;
+  S.r.picked = i;
+  if (i === -1) { S.mood = clamp(S.mood - 15); S.streak = 0; }
+  else {
+    var o = R.opts[i];
+    if (o.v === 2) { S.pts += 1; S.mood = clamp(S.mood + 20); S.streak++; if (S.streak > S.maxStreak) S.maxStreak = S.streak; }
+    else if (o.v === 1) { S.pts += 0.4; S.mood = clamp(S.mood + 5); S.streak = 0; }
+    else { S.mood = clamp(S.mood - 15); S.streak = 0; }
+  }
+  stopTimer(); render();
+}
+function confetti() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var c = document.createElement('div'), cols = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', 'var(--s5)', 'var(--accent)'];
+  c.className = 'confetti';
+  for (var i = 0; i < 30; i++) { var s = document.createElement('span'); s.style.left = Math.random() * 100 + '%'; s.style.background = cols[i % cols.length]; s.style.animationDelay = (Math.random() * 0.6) + 's'; c.appendChild(s); }
+  document.body.appendChild(c); setTimeout(function () { c.remove(); }, 3200);
+}
+function finish() {
+  var L = cur(); stopTimer();
+  var pct = Math.round(S.pts / maxPts(L) * 100), stars = starsFor(pct), xp = pct + stars * 25 + (L.n === 4 ? S.maxStreak * 5 : 0);
+  var prev = store.best[L.n];
+  if (!prev || xp > prev.xp) { store.best[L.n] = { stars: Math.max(stars, prev ? prev.stars : 0), pct: pct, xp: xp }; }
+  else if (stars > prev.stars) prev.stars = stars;
+  save();
+  S.res = { pct: pct, stars: stars, xp: xp }; S.screen = 'result'; render(); window.scrollTo(0, 0);
+  if (stars >= 2) confetti();
+}
+function advance() {
+  var L = cur(); S.i++;
+  if (S.i >= roundCount(L)) finish(); else startRound();
+}
+
+function act(a, d) {
+  var L = cur(), R, st = S.r;
+  if (a === 'home') { stopTimer(); S.screen = 'home'; render(); window.scrollTo(0, 0); }
+  else if (a === 'open') { var n = +d.n; if (!unlocked(n)) return; stopTimer(); S.lv = n; S.pred = null; S.screen = 'intro'; render(); window.scrollTo(0, 0); }
+  else if (a === 'pred') { S.pred = +d.v; render(); }
+  else if (a === 'start') { if (S.pred !== null) startLevel(); }
+  else if (a === 'next') advance();
+  else if (a === 'final') { S.screen = 'final'; render(); window.scrollTo(0, 0); }
+  else if (a === 'spot') { R = L.rounds[S.i]; if (st.picked !== null) return; st.picked = +d.i; if (st.picked === R.slip) S.pts += 1; render(); }
+  else if (a === 'gap') { if (st.gap !== null) return; st.gap = +d.i; if (st.gap === 0) S.pts += 1; render(); }
+  else if (a === 'rew') { if (st.rew !== null) return; st.rew = +d.i; if (st.rew === 0) S.pts += 1; render(); }
+  else if (a === 'pick') { if (st.sent) return; st.sel[+d.s] = +d.i; render(); }
+  else if (a === 'send') { if (st.sent || !st.sel.every(function (v) { return v !== null; })) return; st.sent = true; st.sel.forEach(function (v) { if (v === 0) S.pts += 1; }); render(); }
+  else if (a === 'flow') flowPick(+d.i);
+  else if (a === 'br') {
+    if (st.picked !== null) return;
+    var o = L.turns[S.i][st.v].opts[+d.i]; st.picked = +d.i; S.pts += o.s; S.tension = clamp(S.tension + o.d); render();
+  }
+  else if (a === 'coach') { if (st.picked !== null) return; st.picked = +d.i; S.pts += L.coach.opts[+d.i].s; render(); }
+  else if (a === 'copy') {
+    var ta = document.getElementById('summary'), msg = document.getElementById('copied');
+    function fallback() { ta.focus(); ta.select(); if (msg) msg.textContent = 'Press copy on your keyboard to copy the selected text.'; }
+    try { navigator.clipboard.writeText(ta.value).then(function () { if (msg) msg.textContent = 'Copied.'; }, fallback); } catch (e) { fallback(); }
+  }
+}
+
+app.addEventListener('click', function (e) {
+  var t = e.target.closest('[data-a]');
+  if (!t || t.disabled) return;
+  act(t.getAttribute('data-a'), t.dataset);
+});
+app.addEventListener('change', function (e) {
+  if (e.target.id === 'relaxed') {
+    S.relaxed = e.target.checked; stopTimer(); render();
+    if (!S.relaxed && S.r && S.r.picked === null) { S.r.ms = 12000; render(); startTimer(); }
+  }
+});
+app.addEventListener('input', function (e) {
+  if (e.target.id === 'goal') { S.goal = e.target.value; var s = document.getElementById('summary'); if (s) s.value = summaryText(); }
+});
+
+render();
+})();
+</script>
+
+</body>
+</html>
